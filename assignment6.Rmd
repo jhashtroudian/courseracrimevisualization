@@ -1,0 +1,187 @@
+---
+title: "Coursera Crime Visualization"
+author: "Javad Hashtroudian"
+date: "October 10, 2017"
+geometry: "left=1cm,right=1cm,top=2cm,bottom=2cm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load needed libraries
+
+## load libraries and set working directory and clean workspace
+
+```{r cars}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+setwd("c:/assignment6")
+rm(list = ls())
+```
+
+
+## load both csvs
+and do a little EDA (expolrotory data analysis)
+
+
+```{r}
+sanf_14 <- read.csv("c:/assignment6/sanfrancisco_incidents_summer_2014.csv", stringsAsFactors = FALSE, header = TRUE )
+seat_14 <- read.csv("c:/assignment6/seattle_incidents_summer_2014.csv", stringsAsFactors = FALSE, header = TRUE)
+
+head(sanf_14)
+head(seat_14)
+
+str(sanf_14)
+str(seat_14)
+
+
+summary(sanf_14)
+summary(seat_14)
+
+```
+
+## Note the two cities report their crime statistics in differen ways
+Therefore I decided to examine only one city
+But I will chose which city
+
+## Next I decided to do some very preliminary plots on the cities to decide what to examine with more details
+
+
+```{r}
+#change SF category from string to categorical so I can plot
+sanf_14$Category <- as.factor(sanf_14$Category)
+plot(sanf_14$Category)
+title(main = "Plot of different categories of crime in San Fransisco 2014")
+
+```
+
+
+```{r}
+#change SF day of week from string to categorical so I can plot
+sanf_14$DayOfWeek <- as.factor(sanf_14$DayOfWeek)
+plot(sanf_14$DayOfWeek)
+title(main = "Plot of crime in San Fransisco 2014 by day of week")
+```
+
+### Finally a quick look at one column from Seatle before I make my mind up
+
+```{r}
+#change from string to categorical so I can plot
+seat_14$Offense.Type <- as.factor(seat_14$Offense.Type)
+plot(seat_14$Offense.Type)
+title(main = "Plot of different categories of crime in Seatle 2015")
+```
+
+
+# Based on the above preliminary data analytics I decided to examine the San Fransisco data in more detail.
+
+
+```{r}
+# first question is crime in Sanfransisco more prevelant at different times?
+
+sanf_14$Time <- as.factor(sanf_14$Time)
+plot(sanf_14$Time)
+title(main = "Plot of crime in San Fransisco 2014 by raw time value as reported")
+```
+
+
+It appears that crime goes down after 10 pm to a minimum around 4am
+However the above graph may well be misleading as there are two many categories
+
+So next I will look at just the hours
+```{r}
+# reload the Sanfransisco data into a different data from to look at time in different ways
+sf_14 <- read.csv("c:/assignment6/sanfrancisco_incidents_summer_2014.csv", stringsAsFactors = FALSE, header = TRUE )
+sanf_14$timeinhour <- substring(sf_14$Time,0,2)
+sanf_14$timeinhour <- as.factor(sanf_14$timeinhour)
+plot(sanf_14$timeinhour)
+title(main = "Plot of crime in San Fransisco 2014 by hour")
+
+```
+
+Definitely it appears to confirm previous idea that that crime goes down after 10 pm to a minimum around 4am
+Also shows a peack at midday
+
+
+
+
+Now I'm wondering if different crimes vary by time
+
+```{r}
+arson <- filter(sanf_14, sf_14$Category == 'ARSON')
+plot(arson$timeinhour)
+title(main = "Plot of crime of arson in San Fransisco 2014 by hour")
+
+
+```
+
+
+There is not enough arson data to het a good satistic for now.
+So next I looked at crimes with many instances
+
+```{r}
+summary(sanf_14$Category)
+```
+
+So I'll look at LARCENY/THEFT
+```{r}
+lt <- filter(sanf_14, sf_14$Category == 'LARCENY/THEFT')
+plot(lt$timeinhour)
+title(main = "Plot of crime of larceny or theft in San Fransisco 2014 by hour")
+
+```
+```{r}
+plot(lt$DayOfWeek)
+title(main = "Plot of crime of larceny or theft in San Fransisco 2014 by day of week")
+```
+
+Note this case the specifc (LARCENY/THEFT) crime looks very similar to the totality of crime
+
+So now I'm curious about same plots for VEHICLE THEFT
+
+```{r}
+vt <- filter(sanf_14, sf_14$Category == 'VEHICLE THEFT')
+plot(vt$timeinhour)
+title(main = "Plot of crime of vehicle theft in San Fransisco 2014 by hour")
+
+```
+
+```{r}
+plot(vt$DayOfWeek)
+title(main = "Plot of crime of vehicle theft in San Fransisco 2014 by day of week")
+```
+
+Next do the same for ASSAULT
+
+```{r}
+assult <- filter(sanf_14, sf_14$Category == 'ASSAULT')
+plot(assult$timeinhour)
+title(main = "Plot of crime of assult in San Fransisco 2014 by hour")
+
+```
+
+```{r}
+plot(assult$DayOfWeek)
+title(main = "Plot of crime of assult in San Fransisco 2014 by day of week")
+```
+
+
+It is interesting that assults continue to be high until 2am
+My guess is that this relates to people drinking alcohol
+There are not enough DRIVING UNDER THE INFLUENC to do any corrolation so I look up typical times bars close in San Fransisco
+At https://www.tripadvisor.com/ShowTopic-g60713-i30-k1347482-Time_that_bars_close-San_Francisco_California.html
+I discover that 2am is when they stop serving liquor
+Also:
+Most hotels' bars close at 01:00.
+Most bars with entertainment close at 01:30.
+Most gin mills close at 01:50.
+Last call for alcohol is usually twenty minutes before closing.
+
+So my visualization made me predict a corralation between time of assults and bar closing times
+
+
